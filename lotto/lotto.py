@@ -1,8 +1,7 @@
 from lotto.bet import Bet
 from lotto.city import City
 from lotto.output import PrintTicket
-from lotto.extraction import ExtractionOutput
-from random import randint
+from lotto.extraction_output import ExtractionOutput
 import random
 import time
 
@@ -25,6 +24,7 @@ class Lotto:
 
         # extract the numbers before the loop, so that inside I can check the win for each ticket
         extracted_num = self.extraction()
+
         # if there is any winning ticket add it into the list
         winning_tickets = []
 
@@ -60,6 +60,7 @@ class Lotto:
             self.tickets.append(self.ticket)
 
             # verify if it is a winning ticket
+
             winner, winning_numbers = self.is_winning(generated_num, Bet.bets[bet], city, extracted_num)
             if winner == True:
                 winning_tickets.append([bet, city, winning_numbers])
@@ -67,10 +68,47 @@ class Lotto:
             i += 1
 
         # PRINT TICKETS
+        time.sleep(1)
+        print("\n... Printing your tickets ...\n")
+        time.sleep(3)
         PrintTicket(self.tickets, n)
 
         # EXTRACTION
+        time.sleep(1)
+        print("\n... Extracting the winning numbers ...")
+        time.sleep(3)
         extraction_output = ExtractionOutput(extracted_num)
+
+        # SHOW IF THERE ARE WINNING TICKETS OR LOSE MESSAGE
+        time.sleep(1)
+        print("\n... Verifying your tickets ...\n")
+        time.sleep(3)
+
+        if winner == True:
+            print("WOW! YOU WON!\n")
+            print("LUCKY TICKET", end="")
+            if len(winning_tickets) > 1:
+                print("S", end="")
+            print("\n")
+
+            for winning_ticket in winning_tickets:
+                # if the winning ticket is in the TUTTE wheel:
+                # print the winning numbers for each wheel
+                if winning_ticket[1] == "TUTTE":
+                    all_wheels = [(wheel, wheel_num[wheel]) for wheel_num in winning_ticket[2] for wheel in wheel_num]
+
+                    for wheel in all_wheels:
+                        wheel_numbers = str(wheel[1]).replace(",", "")
+                        print(f"{wheel_numbers[1:-1]}: {winning_ticket[0].capitalize()} on '{wheel[0].capitalize()}' wheel (Bet on '{winning_ticket[1].capitalize()}')")
+                else:
+                    # print the winning number for the specific wheel
+                    wheel_numbers = str(winning_ticket[2]).replace(",", "")
+                    print(f"{wheel_numbers[1:-1]}: {winning_ticket[0].capitalize()} on '{winning_ticket[1].capitalize()}' wheel")
+            print("\n")
+        else:
+            # lose message
+            print("OH NO! None of your tickets were winning, try again!")
+
 
 
     def ask_num(self):
@@ -117,20 +155,40 @@ class Lotto:
 
     def extraction(self):
         extraction = {}
-        for city in City.cities:
-            extraction[city] = []
-            already_extracted = []
-            for i in range(5):
-                while True:
-                    random_number = randint(1, 90)
-                    if random_number not in already_extracted:
-                        extraction[city].append(random_number)
-                        break
-                already_extracted.append(random_number)
+        for city in City.cities[:-1]:
+            extraction[city] = random.sample(range(1, 91), 5)
         return extraction
 
+
+    def is_winning(self, num, bet, city, extracted_num):
+        list_of_wins = []
+        # if the wheel is TUTTE, check the matching numbers for each wheel
+        # save them in a list containing dictionaries like {wheel:[list-of-matching-numbers]}
+        if city == "TUTTE":
+            win = dict()
+            for c in City.cities[:-1]:
+                win = { c : []}
+                for n in num:
+                    if n in extracted_num[c]:
+                        win[c].append(n)
+                if win[c] != [] and len(win[c]) == bet:
+                    list_of_wins.append(win)
+        else:
+            # save all the winning number in a list
+            win = []
+            for n in num:
+                if n in extracted_num[city]:
+                    win.append(n)
+            if len(win) == bet:
+                # optimizing list names
+                list_of_wins = win
+
+        if len(list_of_wins) > 0:
+            return True, list_of_wins
+        else:
+            return False, list_of_wins
 
 
 # TEST #
 if __name__ == '__main__':
-    Lotto(3)
+    Lotto(5)

@@ -1,5 +1,6 @@
 from lotto.city import City
 from datetime import date
+import random
 
 class ExtractionOutput:
     """
@@ -32,19 +33,10 @@ class ExtractionOutput:
             print("|")
         print(row)
 
-
 # TEST #
 if __name__ == "__main__":
     extraction = {}
-    for city in City.cities:
-        extraction[city] = []
-        already_extracted = []
-        for i in range(5):
-            while True:
-                random_number = randint(1, 90)
-                if random_number not in already_extracted:
-                    extraction[city].append(random_number)
-                    break
-            already_extracted.append(random_number)
+    for city in City.cities[:-1]:
+        extraction[city] = random.sample(range(1, 91), 5)
 
     ExtractionOutput(extraction)
