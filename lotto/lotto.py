@@ -1,7 +1,10 @@
 from lotto.bet import Bet
 from lotto.city import City
 from lotto.output import PrintTicket
+from lotto.extraction import ExtractionOutput
+from random import randint
 import random
+import time
 
 class Lotto:
     """
@@ -13,10 +16,17 @@ class Lotto:
     - the city to bet
     Then the numbers from 1 to 90 will be randomly extracted for each ticket
     Then I print out the ticket
+    Extract 5 numbers for each city
+    Verify is there are any winning tickets
     """
     def __init__(self, n):
         # create a list of lists, containing all the tickets' informations
         self.tickets = []
+
+        # extract the numbers before the loop, so that inside I can check the win for each ticket
+        extracted_num = self.extraction()
+        # if there is any winning ticket add it into the list
+        winning_tickets = []
 
         # for each ticket I call the functions to ask
         # how many numbers to extract (ask_num)
@@ -48,10 +58,19 @@ class Lotto:
             self.ticket.append(generated_num)
 
             self.tickets.append(self.ticket)
+
+            # verify if it is a winning ticket
+            winner, winning_numbers = self.is_winning(generated_num, Bet.bets[bet], city, extracted_num)
+            if winner == True:
+                winning_tickets.append([bet, city, winning_numbers])
+
             i += 1
 
-        #print(self.tickets)
+        # PRINT TICKETS
         PrintTicket(self.tickets, n)
+
+        # EXTRACTION
+        extraction_output = ExtractionOutput(extracted_num)
 
 
     def ask_num(self):
@@ -94,6 +113,23 @@ class Lotto:
     def generate_numbers(self, n):
         randomlist = random.sample(range(1, 91), int(n))
         return randomlist
+
+
+    def extraction(self):
+        extraction = {}
+        for city in City.cities:
+            extraction[city] = []
+            already_extracted = []
+            for i in range(5):
+                while True:
+                    random_number = randint(1, 90)
+                    if random_number not in already_extracted:
+                        extraction[city].append(random_number)
+                        break
+                already_extracted.append(random_number)
+        return extraction
+
+
 
 # TEST #
 if __name__ == '__main__':
